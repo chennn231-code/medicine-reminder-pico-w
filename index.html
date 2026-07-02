@@ -115,56 +115,99 @@
   </main>
 
   <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZHDnKUzrl5WVoW0d6Ui6d6SfuQ3NrXFR94qLZzDvKHGHd2tkVKWDY5P4JSNVnwSBNW8FSPJ2MUQtN/pub?gid=0&single=true&output=csv"
-    async function loadData() {
-      const response = await fetch(CSV_URL);
-      const text = await response.text();
-      const rows = text.trim().split("\n").map(row => row.split(","));
-      const data = rows.slice(1);
+  const SHEET_ID = "1t9AU9FsTS-aqfgNNj_zt7nREGgnEE-rTwNa-LnVZP_M";
+  const SHEET_NAME = "工作表1";
 
-      let totalCount = data.length;
-      let takenCount = 0;
-      let totalDuration = 0;
-      let durationCount = 0;
-
-      const tbody = document.getElementById("dataBody");
-      tbody.innerHTML = "";
-
-      data.reverse().forEach(row => {
-        const time = row[0] || "";
-        const status = row[1] || "";
-        const duration = row[2] || "";
-        const medName = row[3] || "";
-
-        if (status.includes("已吃藥")) {
-          takenCount++;
-        }
-
-        const durationNumber = parseInt(duration);
-        if (!isNaN(durationNumber)) {
-          totalDuration += durationNumber;
-          durationCount++;
-        }
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${time}</td>
-          <td class="ok">${status}</td>
-          <td>${duration} 秒</td>
-          <td>${medName}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById("totalCount").textContent = totalCount;
-      document.getElementById("takenCount").textContent = takenCount;
-
-      const avg = durationCount > 0 ? Math.round(totalDuration / durationCount) : 0;
-      document.getElementById("avgTime").textContent = avg + " 秒";
+  function loadData() {
+    const oldScript = document.getElementById("sheet-data-script");
+    if (oldScript) {
+      oldScript.remove();
     }
 
-    loadData();
-    setInterval(loadData, 30000);
-  </script>
+    const script = document.createElement("script");
+    script.id = "sheet-data-script";
+    script.src =
+      "https://docs.google.com/spreadsheets/d/" +
+      SHEET_ID +
+      "/gviz/tq?sheet=" +
+      encodeURIComponent(SHEET_NAME) +
+      "&tqx=responseHandler:handleSheetData&t=" +
+      Date.now();
+
+    document.body.appendChild(script);
+  }
+
+  function handleSheetData(response) {
+    const tbody = document.getElementById("dataBody");
+    tbody.innerHTML = "";
+
+    if (!response || !response.table || !response.table.rows) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4">資料讀取失敗，請確認 Google Sheets 是否已開放或發布。</td>
+        </tr>
+      `;
+      return;
+    }
+
+    const rows = response.table.rows;
+
+    const data = rows
+      .map(row => {
+        const cells = row.c || [];
+
+        return {
+          time: cells[0] ? (cells[0].f || cells[0].v || "") : "",
+          status: cells[1] ? (cells[1].v || "") : "",
+          duration: cells[2] ? (cells[2].v || "") : "",
+          medName: cells[3] ? (cells[3].v || "") : ""
+        };
+      })
+      .filter(item => item.status || item.duration || item.medName);
+
+    let totalCount = data.length;
+    let takenCount = 0;
+    let totalDuration = 0;
+    let durationCount = 0;
+
+    data.reverse().forEach(item => {
+      if (String(item.status).includes("已吃藥")) {
+        takenCount++;
+      }
+
+      const durationNumber = parseInt(item.duration);
+      if (!isNaN(durationNumber)) {
+        totalDuration += durationNumber;
+        durationCount++;
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.time}</td>
+        <td class="ok">${item.status}</td>
+        <td>${item.duration} 秒</td>
+        <td>${item.medName}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("totalCount").textContent = totalCount;
+    document.getElementById("takenCount").textContent = takenCount;
+
+    const avg = durationCount > 0 ? Math.round(totalDuration / durationCount) : 0;
+    document.getElementById("avgTime").textContent = avg + " 秒";
+
+    if (totalCount === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4">目前沒有完整資料，請確認 Google Sheets 第 B～D 欄有資料。</td>
+        </tr>
+      `;
+    }
+  }
+
+  loadData();
+  setInterval(loadData, 30000);
+</script>
 </body>
 </html>
