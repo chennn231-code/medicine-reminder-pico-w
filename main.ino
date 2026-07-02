@@ -23,7 +23,7 @@ const char* WIFI_PASS = "asdfghjkl";
 const char* LINE_TOKEN = "yj+em1c6XKsXudkLDxJUNcDXDvyLh/BIQku27CoozWAJgKbXF+Vo2gWOJWtmFnZ9ZDkECh3PNV/b7ICPw1fG8pYpWSTDmSY1WCrBjoBVOzXPTPVhp6ZLHPz+hfm99PnT9r1f2lTeaEH44SkJ1iFaIAdB04t89/1O/w1cDnyilFU=";
 
 // ！！！請在這裡貼上您剛剛重新部署複製的完整網址！！！
-const char* GAS_URL = "https://script.google.com/macros/s/AKfycbwwPjJGaGVOdCSfgAsiZlbR4Leb-VX_WNkphX0YtlotqjhXxCpH3XpSMG2TXXGurtIM/exec"; 
+const char* GAS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZHDnKUzrl5WVoW0d6Ui6d6SfuQ3NrXFR94qLZzDvKHGHd2tkVKWDY5P4JSNVnwSBNW8FSPJ2MUQtN/pub?gid=0&single=true&output=csv"; 
 const String MED_NAME = "維他命C"; // 完整藥名
 
 void sendLineMessage(String text);
