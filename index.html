@@ -115,9 +115,7 @@
   </main>
 
   <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZHDnKUzrl5WVoW0d6Ui6d6SfuQ3NrXFR94qLZzDvKHGHd2tkVKWDY5P4JSNVnwSBNW8FSPJ2MUQtN/pub?gid=0&single=true&output=csv
-";
-
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZHDnKUzrl5WVoW0d6Ui6d6SfuQ3NrXFR94qLZzDvKHGHd2tkVKWDY5P4JSNVnwSBNW8FSPJ2MUQtN/pub?gid=0&single=true&output=csv"
     async function loadData() {
       const response = await fetch(CSV_URL);
       const text = await response.text();
