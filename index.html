@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>藥物提醒 Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, "Microsoft JhengHei", sans-serif;
+      margin: 0;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #1f3f73;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #1f3f73;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background: #1f3f73;
+      color: white;
+    }
+
+    .ok {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>藥物提醒 Dashboard</h1>
+    <p>Raspberry Pi Pico W 智慧吃藥提醒紀錄</p>
+  </header>
+
+  <main>
+    <section class="cards">
+      <div class="card">
+        <h2>總紀錄筆數</h2>
+        <div class="number" id="totalCount">0</div>
+      </div>
+
+      <div class="card">
+        <h2>已完成服藥</h2>
+        <div class="number" id="takenCount">0</div>
+      </div>
+
+      <div class="card">
+        <h2>平均反應時間</h2>
+        <div class="number" id="avgTime">0 秒</div>
+      </div>
+    </section>
+
+    <table>
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>服藥狀態</th>
+          <th>反應秒數</th>
+          <th>藥品名稱</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody">
+        <tr>
+          <td colspan="4">資料載入中...</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZHDnKUzrl5WVoW0d6Ui6d6SfuQ3NrXFR94qLZzDvKHGHd2tkVKWDY5P4JSNVnwSBNW8FSPJ2MUQtN/pub?gid=0&single=true&output=csv
+";
+
+    async function loadData() {
+      const response = await fetch(CSV_URL);
+      const text = await response.text();
+      const rows = text.trim().split("\n").map(row => row.split(","));
+      const data = rows.slice(1);
+
+      let totalCount = data.length;
+      let takenCount = 0;
+      let totalDuration = 0;
+      let durationCount = 0;
+
+      const tbody = document.getElementById("dataBody");
+      tbody.innerHTML = "";
+
+      data.reverse().forEach(row => {
+        const time = row[0] || "";
+        const status = row[1] || "";
+        const duration = row[2] || "";
+        const medName = row[3] || "";
+
+        if (status.includes("已吃藥")) {
+          takenCount++;
+        }
+
+        const durationNumber = parseInt(duration);
+        if (!isNaN(durationNumber)) {
+          totalDuration += durationNumber;
+          durationCount++;
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${time}</td>
+          <td class="ok">${status}</td>
+          <td>${duration} 秒</td>
+          <td>${medName}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("totalCount").textContent = totalCount;
+      document.getElementById("takenCount").textContent = takenCount;
+
+      const avg = durationCount > 0 ? Math.round(totalDuration / durationCount) : 0;
+      document.getElementById("avgTime").textContent = avg + " 秒";
+    }
+
+    loadData();
+    setInterval(loadData, 30000);
+  </script>
+</body>
+</html>
